@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ETpanthiya.lk Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #e6f3ff;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 123, 255, 0.2);
+    }
+    h2 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 24px;
+    }
+    label {
+      margin-top: 14px;
+      font-weight: 600;
+      display: block;
+    }
+    input, select, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>ETpanthiya.lk Admin Panel</h2>
+    <label>Title</label>
+    <input type="text" id="title" placeholder="Enter title" />
+
+    <label>Tab</label>
+    <select id="tab">
+      <option value="feed">Feed</option>
+      <option value="updates">Updates</option>
+      <option value="docs">Docs</option>
+      <option value="lessons">Lessons</option>
+    </select>
+
+    <label>Category</label>
+    <input type="text" id="category" placeholder="Optional" />
+
+    <label>Caption</label>
+    <input type="text" id="caption" placeholder="Short description" />
+
+    <label>Description</label>
+    <textarea id="description" rows="4" placeholder="Full description..."></textarea>
+
+    <label>YouTube / Facebook Embed URL</label>
+    <input type="text" id="embed" placeholder="https://..." />
+
+    <label>Date & Time</label>
+    <input type="datetime-local" id="datetime" />
+
+    <label>Upload Image</label>
+    <input type="file" id="image" />
+
+    <label>Upload Document</label>
+    <input type="file" id="document" />
+
+    <button onclick="submitForm()">Submit</button>
+  </div>
+
+  <!-- Firebase & script -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
