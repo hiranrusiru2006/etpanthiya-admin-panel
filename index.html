@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ETpanthiya Admin Panel</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h2><i class="fas fa-tools"></i> ETpanthiya Admin Panel</h2>
+      <input type="text" id="title" placeholder="Title" />
+      <select id="tab">
+        <option value="feed">Feed</option>
+        <option value="updates">Updates</option>
+        <option value="docs">Docs</option>
+        <option value="lessons">Lessons</option>
+      </select>
+      <input type="text" id="category" placeholder="Category" />
+      <input type="text" id="caption" placeholder="Caption" />
+      <textarea id="description" placeholder="Description"></textarea>
+      <input type="text" id="embed" placeholder="YouTube/Facebook Embed Link" />
+      <input type="datetime-local" id="datetime" />
+      <label>Upload Image:</label>
+      <input type="file" id="image" />
+      <label>Upload Document:</label>
+      <input type="file" id="document" />
+      <button onclick="submitForm()"><i class="fas fa-paper-plane"></i> Submit</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
