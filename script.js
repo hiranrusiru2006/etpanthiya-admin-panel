@@ -1,68 +1,48 @@
-// Firebase Config
-const firebaseConfig = {
-  apiKey: "AIzaSyAgJI8gWLkfP0BJXGodj3ovthOhgzAmCWo",
-  authDomain: "etpanthiya-aa44b.firebaseapp.com",
-  projectId: "etpanthiya-aa44b",
-  storageBucket: "etpanthiya-aa44b.appspot.com",
-  messagingSenderId: "6707718138",
-  appId: "1:6707718138:web:c2b8fb53ad93d5ed762643"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-async function uploadToImgur(file) {
-  const formData = new FormData();
-  formData.append("image", file);
-  const res = await fetch("https://api.imgur.com/3/image", {
-    method: "POST",
-    headers: {
-      Authorization: "Client-ID 8c21d7cbdbe85c7"
-    },
-    body: formData
-  });
-  const data = await res.json();
-  return data.data.link;
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: #f0f6fc;
+  margin: 0;
+  padding: 20px;
 }
-
-async function uploadToUguu(file) {
-  const formData = new FormData();
-  formData.append("file", file);
-  const res = await fetch("https://uguu.se/upload.php", {
-    method: "POST",
-    body: formData
-  });
-  const data = await res.json();
-  return data.files[0].url;
+.container {
+  max-width: 550px;
+  margin: auto;
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
 }
-
-async function submitForm() {
-  const title = document.getElementById("title").value;
-  const tab = document.getElementById("tab").value;
-  const category = document.getElementById("category").value;
-  const caption = document.getElementById("caption").value;
-  const description = document.getElementById("description").value;
-  const embed = document.getElementById("embed").value;
-  const datetime = document.getElementById("datetime").value;
-  const imageFile = document.getElementById("image").files[0];
-  const docFile = document.getElementById("document").files[0];
-
-  let imageUrl = "", docUrl = "";
-
-  if (imageFile) imageUrl = await uploadToImgur(imageFile);
-  if (docFile) docUrl = await uploadToUguu(docFile);
-
-  await db.collection(tab).add({
-    title,
-    category,
-    caption,
-    description,
-    embed,
-    datetime,
-    imageUrl,
-    docUrl,
-    createdAt: new Date().toISOString(),
-  });
-
-  alert("Uploaded successfully!");
+h2 {
+  color: #007bff;
+  text-align: center;
+  margin-bottom: 20px;
+}
+input,
+select,
+textarea,
+button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+button {
+  background: #007bff;
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+button:hover {
+  background: #0056b3;
+}
+label {
+  margin-top: 15px;
+  display: block;
+  font-weight: bold;
+  color: #333;
 }
