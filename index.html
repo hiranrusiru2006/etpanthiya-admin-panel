@@ -92,6 +92,15 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        .debug-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 14px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -131,12 +140,20 @@
                 <p style="text-align: center;">Your phone number has been successfully verified.</p>
             </div>
         </div>
+
+        <!-- Debug Information -->
+        <div id="debugInfo" class="debug-info">
+            <h3>Debug Information</h3>
+            <div id="debugContent"></div>
+            <button onclick="toggleDebugMode()">Toggle Debug Mode</button>
+        </div>
     </div>
 
     <script>
         // Configuration - Your Textit.bz credentials
         const TEXTIT_ID = "94769343928"; // Your Textit.bz account phone number
         const TEXTIT_PW = "9694";       // Your Textit.bz password
+        const DEBUG_MODE = true;        // Set to false in production
         
         // Global variables
         let generatedOtp = "";
@@ -202,33 +219,13 @@
             // Create the API URL
             const apiUrl = `https://www.textit.biz/sendmsg/?id=${TEXTIT_ID}&pw=${TEXTIT_PW}&to=${phoneNumber}&text=${encodeURIComponent(message)}`;
             
-            // For testing purposes - comment this out in production
-            console.log("SMS would be sent to:", phoneNumber);
-            console.log("OTP:", generatedOtp);
-            console.log("API URL:", apiUrl);
-            
-            // Simulate successful sending for testing
-            setTimeout(() => {
-                // Hide step 1, show step 2
-                document.getElementById("step1").classList.add("hidden");
-                document.getElementById("step2").classList.remove("hidden");
+            if (DEBUG_MODE) {
+                // Debug mode - simulate sending
+                addDebugInfo(`DEBUG MODE: SMS would be sent to: ${phoneNumber}`);
+                addDebugInfo(`DEBUG MODE: OTP: ${generatedOtp}`);
+                addDebugInfo(`DEBUG MODE: API URL: ${apiUrl}`);
                 
-                // Start countdown timer for resend
-                startCountdown();
-                
-                // Clear any previous OTP error
-                document.getElementById("otpError").textContent = "";
-                
-                hideButtonLoading('sendOtpBtn', 'Send Verification Code');
-            }, 1500);
-            
-            /
-            // Actual SMS sending code (uncomment for production)
-            fetch(apiUrl)
-            .then(response => response.text())
-            .then(data => {
-                // Check if the response indicates success
-                if (data.includes("OK:")) {
+                setTimeout(() => {
                     // Hide step 1, show step 2
                     document.getElementById("step1").classList.add("hidden");
                     document.getElementById("step2").classList.remove("hidden");
@@ -238,24 +235,53 @@
                     
                     // Clear any previous OTP error
                     document.getElementById("otpError").textContent = "";
-                } else {
-                    throw new Error(data || "Unknown error from SMS gateway");
-                }
-            })
-            .catch(error => {
-                console.error("Error sending OTP:", error);
-                phoneError.textContent = "Failed to send verification code. Please try again later.";
-                
-                if (error.message.includes("balance")) {
-                    phoneError.textContent = "SMS service temporarily unavailable. Please try again later.";
-                } else if (error.message.includes("invalid")) {
-                    phoneError.textContent = "Invalid phone number format. Please check and try again.";
-                }
-            })
-            .finally(() => {
-                hideButtonLoading('sendOtpBtn', 'Send Verification Code');
-            });
-            /
+                    
+                    hideButtonLoading('sendOtpBtn', 'Send Verification Code');
+                }, 1500);
+            } else {
+                // Production mode - actual SMS sending
+                fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    addDebugInfo(`API Response: ${data}`);
+                    
+                    // Check if the response indicates success
+                    if (data.includes("OK:")) {
+                        // Hide step 1, show step 2
+                        document.getElementById("step1").classList.add("hidden");
+                        document.getElementById("step2").classList.remove("hidden");
+                        
+                        // Start countdown timer for resend
+                        startCountdown();
+                        
+                        // Clear any previous OTP error
+                        document.getElementById("otpError").textContent = "";
+                    } else {
+                        throw new Error(data || "Unknown error from SMS gateway");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error sending OTP:", error);
+                    addDebugInfo(`Error: ${error.message}`);
+                    phoneError.textContent = "Failed to send verification code. Please try again later.";
+                    
+                    if (error.message.includes("balance")) {
+                        phoneError.textContent = "SMS service temporarily unavailable. Please try again later.";
+                    } else if (error.message.includes("invalid")) {
+                        phoneError.textContent = "Invalid phone number format. Please check and try again.";
+                    } else if (error.message.includes("Authentication failed")) {
+                        phoneError.textContent = "Authentication failed. Please check your credentials.";
+                    }
+                })
+                .finally(() => {
+                    hideButtonLoading('sendOtpBtn', 'Send Verification Code');
+                });
+            }
         }
         
         // Function to verify the entered OTP
@@ -313,33 +339,15 @@
             const resendInfo = document.getElementById("resendInfo");
             resendInfo.innerHTML = `<span class="loading"></span> Sending new code...`;
             
-            // For testing purposes - comment this out in production
-            console.log("Resending SMS to:", phoneNumber);
-            console.log("New OTP:", generatedOtp);
-            
-            // Simulate successful resend for testing
-            setTimeout(() => {
-                // Restart countdown
-                startCountdown();
-                
-                // Show success message
-                document.getElementById("otpError").textContent = "";
-                document.getElementById("otpSuccess").textContent = "New verification code sent!";
-                
-                // Clear success message after 3 seconds
-                setTimeout(() => {
-                    document.getElementById("otpSuccess").textContent = "";
-                }, 3000);
-            }, 1500);
-            
-            / 
-            // Actual resend code (uncomment for production)
+            // Create the API URL
             const apiUrl = `https://www.textit.biz/sendmsg/?id=${TEXTIT_ID}&pw=${TEXTIT_PW}&to=${phoneNumber}&text=${encodeURIComponent(message)}`;
             
-            fetch(apiUrl)
-            .then(response => response.text())
-            .then(data => {
-                if (data.includes("OK:")) {
+            if (DEBUG_MODE) {
+                // Debug mode - simulate resending
+                addDebugInfo(`DEBUG MODE: Resending SMS to: ${phoneNumber}`);
+                addDebugInfo(`DEBUG MODE: New OTP: ${generatedOtp}`);
+                
+                setTimeout(() => {
                     // Restart countdown
                     startCountdown();
                     
@@ -351,18 +359,44 @@
                     setTimeout(() => {
                         document.getElementById("otpSuccess").textContent = "";
                     }, 3000);
-                } else {
-                    throw new Error(data || "Unknown error from SMS gateway");
-                }
-            })
-            .catch(error => {
-                console.error("Error resending OTP:", error);
-                document.getElementById("otpError").textContent = "Failed to resend code. Please try again.";
-                
-                // Reset resend link
-                resendInfo.innerHTML = 'Didn\'t receive code? <a href="#" onclick="resendOTP()">Resend</a>';
-            });
-            */
+                }, 1500);
+            } else {
+                // Production mode - actual resend
+                fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    addDebugInfo(`Resend API Response: ${data}`);
+                    
+                    if (data.includes("OK:")) {
+                        // Restart countdown
+                        startCountdown();
+                        
+                        // Show success message
+                        document.getElementById("otpError").textContent = "";
+                        document.getElementById("otpSuccess").textContent = "New verification code sent!";
+                        
+                        // Clear success message after 3 seconds
+                        setTimeout(() => {
+                            document.getElementById("otpSuccess").textContent = "";
+                        }, 3000);
+                    } else {
+                        throw new Error(data || "Unknown error from SMS gateway");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error resending OTP:", error);
+                    addDebugInfo(`Resend Error: ${error.message}`);
+                    document.getElementById("otpError").textContent = "Failed to resend code. Please try again.";
+                    
+                    // Reset resend link
+                    resendInfo.innerHTML = 'Didn\'t receive code? <a href="#" onclick="resendOTP()">Resend</a>';
+                });
+            }
         }
         
         // Function to start countdown timer
@@ -383,6 +417,31 @@
                 }
             }, 1000);
         }
+        
+        // Function to add debug information
+        function addDebugInfo(message) {
+            if (!DEBUG_MODE) return;
+            
+            const debugContent = document.getElementById("debugContent");
+            const newEntry = document.createElement("div");
+            newEntry.textContent = message;
+            debugContent.prepend(newEntry);
+        }
+        
+        // Function to toggle debug mode display
+        function toggleDebugMode() {
+            const debugInfo = document.getElementById("debugInfo");
+            debugInfo.style.display = debugInfo.style.display === "none" ? "block" : "none";
+        }
+        
+        // Initialize debug info display
+        document.addEventListener("DOMContentLoaded", function() {
+            if (DEBUG_MODE) {
+                document.getElementById("debugInfo").style.display = "block";
+                addDebugInfo("Debug mode activated");
+                addDebugInfo(`Using credentials: ID=${TEXTIT_ID}, PW=****`);
+            }
+        });
         
         // Allow form submission on Enter key for OTP field
         document.getElementById("otp").addEventListener("keypress", function(event) {
