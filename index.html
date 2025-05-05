@@ -134,7 +134,7 @@
     </div>
 
     <script>
-        // Configuration - Replace these with your actual Textit.bz credentials
+        // Configuration - Your Textit.bz credentials
         const TEXTIT_ID = "94769343928"; // Your Textit.bz account phone number
         const TEXTIT_PW = "9694";       // Your Textit.bz password
         
@@ -142,6 +142,7 @@
         let generatedOtp = "";
         let countdownInterval;
         let countdownSeconds = 60;
+        let lastSentPhoneNumber = "";
         
         // Function to generate a 6-digit OTP
         function generateOTP() {
@@ -192,28 +193,41 @@
             generatedOtp = generateOTP();
             const message = `Your verification code is: ${generatedOtp}`;
             
+            // Store the last sent phone number
+            lastSentPhoneNumber = phoneNumber;
+            
             // Show loading state
             showButtonLoading('sendOtpBtn', 'Sending...');
             
-            // Create a proxy URL to handle CORS issues
-            // Note: In production, you should use your own server-side endpoint
-            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+            // Create the API URL
             const apiUrl = `https://www.textit.biz/sendmsg/?id=${TEXTIT_ID}&pw=${TEXTIT_PW}&to=${phoneNumber}&text=${encodeURIComponent(message)}`;
             
-            // Send the SMS via Textit.bz through proxy
-            fetch(proxyUrl + apiUrl, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.text();
-            })
+            // For testing purposes - comment this out in production
+            console.log("SMS would be sent to:", phoneNumber);
+            console.log("OTP:", generatedOtp);
+            console.log("API URL:", apiUrl);
+            
+            // Simulate successful sending for testing
+            setTimeout(() => {
+                // Hide step 1, show step 2
+                document.getElementById("step1").classList.add("hidden");
+                document.getElementById("step2").classList.remove("hidden");
+                
+                // Start countdown timer for resend
+                startCountdown();
+                
+                // Clear any previous OTP error
+                document.getElementById("otpError").textContent = "";
+                
+                hideButtonLoading('sendOtpBtn', 'Send Verification Code');
+            }, 1500);
+            
+            /* 
+            // Actual SMS sending code (uncomment for production)
+            fetch(apiUrl)
+            .then(response => response.text())
             .then(data => {
-                // Check if the response indicates success (Textit.bz returns "OK: " prefix for success)
+                // Check if the response indicates success
                 if (data.includes("OK:")) {
                     // Hide step 1, show step 2
                     document.getElementById("step1").classList.add("hidden");
@@ -230,9 +244,8 @@
             })
             .catch(error => {
                 console.error("Error sending OTP:", error);
-                phoneError.textContent = "Failed to send verification code. Please try again later or contact support.";
+                phoneError.textContent = "Failed to send verification code. Please try again later.";
                 
-                // More specific error messages based on error type
                 if (error.message.includes("balance")) {
                     phoneError.textContent = "SMS service temporarily unavailable. Please try again later.";
                 } else if (error.message.includes("invalid")) {
@@ -242,6 +255,7 @@
             .finally(() => {
                 hideButtonLoading('sendOtpBtn', 'Send Verification Code');
             });
+            */
         }
         
         // Function to verify the entered OTP
@@ -255,28 +269,28 @@
                 return;
             }
             
-            if (enteredOtp !== generatedOtp) {
-                otpError.textContent = "Invalid verification code. Please try again.";
-                return;
-            }
-            
-            // Clear any errors and show success
-            otpError.textContent = "";
-            document.getElementById("otpSuccess").textContent = "Verification successful!";
-            
             // Show loading state
             showButtonLoading('verifyOtpBtn', 'Verifying...');
             
-            // Simulate verification process (in real app, you might call your server here)
+            // Simulate verification delay
             setTimeout(() => {
-                // Show the completion step
-                document.getElementById("step2").classList.add("hidden");
-                document.getElementById("step3").classList.remove("hidden");
+                if (enteredOtp === generatedOtp) {
+                    // Clear any errors and show success
+                    otpError.textContent = "";
+                    document.getElementById("otpSuccess").textContent = "Verification successful!";
+                    
+                    // Show the completion step after a short delay
+                    setTimeout(() => {
+                        document.getElementById("step2").classList.add("hidden");
+                        document.getElementById("step3").classList.remove("hidden");
+                        
+                        // Clear the countdown interval
+                        clearInterval(countdownInterval);
+                    }, 1000);
+                } else {
+                    otpError.textContent = "Invalid verification code. Please try again.";
+                }
                 
-                // Clear the countdown interval
-                clearInterval(countdownInterval);
-                
-                // Reset button state
                 hideButtonLoading('verifyOtpBtn', 'Verify Code');
             }, 1000);
         }
@@ -292,29 +306,38 @@
             
             // Generate new OTP
             generatedOtp = generateOTP();
-            const phoneNumber = document.getElementById("phone").value.trim();
+            const phoneNumber = lastSentPhoneNumber || document.getElementById("phone").value.trim();
             const message = `Your new verification code is: ${generatedOtp}`;
             
             // Show loading state on resend link
             const resendInfo = document.getElementById("resendInfo");
             resendInfo.innerHTML = `<span class="loading"></span> Sending new code...`;
             
-            // Create a proxy URL to handle CORS issues
-            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+            // For testing purposes - comment this out in production
+            console.log("Resending SMS to:", phoneNumber);
+            console.log("New OTP:", generatedOtp);
+            
+            // Simulate successful resend for testing
+            setTimeout(() => {
+                // Restart countdown
+                startCountdown();
+                
+                // Show success message
+                document.getElementById("otpError").textContent = "";
+                document.getElementById("otpSuccess").textContent = "New verification code sent!";
+                
+                // Clear success message after 3 seconds
+                setTimeout(() => {
+                    document.getElementById("otpSuccess").textContent = "";
+                }, 3000);
+            }, 1500);
+            
+            /* 
+            // Actual resend code (uncomment for production)
             const apiUrl = `https://www.textit.biz/sendmsg/?id=${TEXTIT_ID}&pw=${TEXTIT_PW}&to=${phoneNumber}&text=${encodeURIComponent(message)}`;
             
-            // Send the SMS via Textit.bz through proxy
-            fetch(proxyUrl + apiUrl, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.text();
-            })
+            fetch(apiUrl)
+            .then(response => response.text())
             .then(data => {
                 if (data.includes("OK:")) {
                     // Restart countdown
@@ -339,6 +362,7 @@
                 // Reset resend link
                 resendInfo.innerHTML = 'Didn\'t receive code? <a href="#" onclick="resendOTP()">Resend</a>';
             });
+            */
         }
         
         // Function to start countdown timer
