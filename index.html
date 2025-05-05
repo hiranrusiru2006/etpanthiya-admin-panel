@@ -1,97 +1,291 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ETpanthiya.lk Admin Panel</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #e6f3ff;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: #ffffff;
-      padding: 25px;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0, 123, 255, 0.2);
-    }
-    h2 {
-      text-align: center;
-      color: #007bff;
-      margin-bottom: 24px;
-    }
-    label {
-      margin-top: 14px;
-      font-weight: 600;
-      display: block;
-    }
-    input, select, textarea, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 15px;
-    }
-    button {
-      background-color: #007bff;
-      color: white;
-      font-weight: bold;
-      margin-top: 20px;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Number Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .verification-box {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        input[type="tel"], input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .success {
+            background-color: #d5f5e3;
+            color: #27ae60;
+            border: 1px solid #2ecc71;
+        }
+        .error {
+            background-color: #fadbd8;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+        .info {
+            background-color: #d6eaf8;
+            color: #2980b9;
+            border: 1px solid #3498db;
+        }
+        .timer {
+            color: #7f8c8d;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h2>ETpanthiya.lk Admin Panel</h2>
-    <label>Title</label>
-    <input type="text" id="title" placeholder="Enter title" />
+    <div class="verification-box">
+        <h2>Phone Number Verification</h2>
+        <form id="verificationForm">
+            <div class="form-group">
+                <label for="phone">Phone Number:</label>
+                <input type="tel" id="phone" name="phone" placeholder="94712345678" required>
+            </div>
+            <div class="form-group" id="codeGroup" style="display:none;">
+                <label for="code">Verification Code:</label>
+                <input type="text" id="code" name="code" placeholder="Enter 6-digit code" maxlength="6">
+                <div class="timer" id="timer">Code expires in 05:00</div>
+            </div>
+            <button type="button" id="sendBtn">Send Verification Code</button>
+            <button type="button" id="verifyBtn" style="display:none;">Verify Code</button>
+        </form>
+        <div id="message" class="message" style="display:none;"></div>
+    </div>
 
-    <label>Tab</label>
-    <select id="tab">
-      <option value="feed">Feed</option>
-      <option value="updates">Updates</option>
-      <option value="docs">Docs</option>
-      <option value="lessons">Lessons</option>
-    </select>
+    <script>
+        // Configuration (in a real app, these would be handled server-side)
+        const config = {
+            apiKey: '1fd2gkd1610b16db8dtd25deadh8146',
+            username: '94769343928',
+            password: '9694',
+            apiEndpoint: 'https://www.textit.biz/sendmessage',
+            verificationCodeLength: 6,
+            codeExpiryMinutes: 5
+        };
 
-    <label>Category</label>
-    <input type="text" id="category" placeholder="Optional" />
+        // DOM elements
+        const phoneInput = document.getElementById('phone');
+        const codeInput = document.getElementById('code');
+        const sendBtn = document.getElementById('sendBtn');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const codeGroup = document.getElementById('codeGroup');
+        const messageDiv = document.getElementById('message');
+        const timerDiv = document.getElementById('timer');
 
-    <label>Caption</label>
-    <input type="text" id="caption" placeholder="Short description" />
+        // State variables
+        let verificationCode = '';
+        let expiryTime = null;
+        let timerInterval = null;
 
-    <label>Description</label>
-    <textarea id="description" rows="4" placeholder="Full description..."></textarea>
+        // Event listeners
+        sendBtn.addEventListener('click', sendVerificationCode);
+        verifyBtn.addEventListener('click', verifyCode);
 
-    <label>YouTube / Facebook Embed URL</label>
-    <input type="text" id="embed" placeholder="https://..." />
+        // Format phone number as user types
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0 && !value.startsWith('94')) {
+                value = '94' + value;
+            }
+            if (value.length > 11) {
+                value = value.substring(0, 11);
+            }
+            e.target.value = value;
+        });
 
-    <label>Date & Time</label>
-    <input type="datetime-local" id="datetime" />
+        // Send verification code
+        function sendVerificationCode() {
+            const phone = phoneInput.value.trim();
+            
+            // Validate phone number
+            if (!phone || !/^947\d{8}$/.test(phone)) {
+                showMessage('Please enter a valid Sri Lankan phone number starting with 947 (11 digits total)', 'error');
+                return;
+            }
+            
+            // Disable send button during processing
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+            
+            showMessage('Sending verification code to ' + phone + '...', 'info');
+            
+            // Generate random verification code
+            verificationCode = generateRandomCode(config.verificationCodeLength);
+            expiryTime = new Date();
+            expiryTime.setMinutes(expiryTime.getMinutes() + config.codeExpiryMinutes);
+            
+            // Prepare message
+            const message = `Your verification code is: ${verificationCode}. Valid for ${config.codeExpiryMinutes} minutes.`;
+            
+            // In a real implementation, you would make an AJAX call to your server here
+            // which would then use the TextIt.biz API to send the SMS
+            // For security reasons, we're simulating this process
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                // This is where you would actually call the TextIt.biz API
+                // Example API call structure:
+                // fetch(`${config.apiEndpoint}?user=${config.username}&password=${config.password}&phone=${phone}&text=${encodeURIComponent(message)}&apikey=${config.apiKey}`)
+                
+                // For this demo, we'll simulate a successful response
+                simulateApiResponse(phone, message);
+            }, 1500);
+        }
 
-    <label>Upload Image</label>
-    <input type="file" id="image" />
+        // Simulate API response
+        function simulateApiResponse(phone, message) {
+            console.log('Simulated API call to TextIt.biz:');
+            console.log('Phone:', phone);
+            console.log('Message:', message);
+            console.log('API Key:', config.apiKey);
+            
+            // Assume success for demo purposes
+            showMessage(`Verification code sent to ${phone}`, 'success');
+            
+            // Show verification code input
+            codeGroup.style.display = 'block';
+            verifyBtn.style.display = 'block';
+            sendBtn.style.display = 'none';
+            
+            // Start countdown timer
+            startCountdown();
+        }
 
-    <label>Upload Document</label>
-    <input type="file" id="document" />
+        // Verify the entered code
+        function verifyCode() {
+            const enteredCode = codeInput.value.trim();
+            
+            if (!enteredCode || enteredCode.length !== config.verificationCodeLength) {
+                showMessage(`Please enter a valid ${config.verificationCodeLength}-digit code`, 'error');
+                return;
+            }
+            
+            if (new Date() > expiryTime) {
+                showMessage('Verification code has expired. Please request a new one.', 'error');
+                resetVerificationForm();
+                return;
+            }
+            
+            if (enteredCode === verificationCode) {
+                // Success - code matches
+                showMessage('Phone number verified successfully!', 'success');
+                clearInterval(timerInterval);
+                
+                // In a real app, you would submit the form or redirect
+                setTimeout(() => {
+                    alert('Verification complete! You would now be redirected or your form would be submitted.');
+                }, 1000);
+            } else {
+                showMessage('Invalid verification code. Please try again.', 'error');
+                codeInput.value = '';
+                codeInput.focus();
+            }
+        }
 
-    <button onclick="submitForm()">Submit</button>
-  </div>
+        // Helper functions
+        function generateRandomCode(length) {
+            const chars = '0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
 
-  <!-- Firebase & script -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-  <script src="script.js"></script>
+        function startCountdown() {
+            clearInterval(timerInterval);
+            
+            function updateTimer() {
+                const now = new Date();
+                const diff = expiryTime - now;
+                
+                if (diff <= 0) {
+                    clearInterval(timerInterval);
+                    timerDiv.textContent = 'Code has expired';
+                    showMessage('Verification code has expired. Please request a new one.', 'error');
+                    resetVerificationForm();
+                    return;
+                }
+                
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                timerDiv.textContent = `Code expires in ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function resetVerificationForm() {
+            codeGroup.style.display = 'none';
+            verifyBtn.style.display = 'none';
+            sendBtn.style.display = 'block';
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Send Verification Code';
+            codeInput.value = '';
+            clearInterval(timerInterval);
+        }
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = 'message ' + (type || '');
+            messageDiv.style.display = 'block';
+        }
+    </script>
 </body>
 </html>
