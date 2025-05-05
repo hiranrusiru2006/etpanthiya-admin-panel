@@ -7,21 +7,21 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 400px;
+            max-width: 500px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
         }
-        .verification-box {
+        .container {
             background-color: white;
-            padding: 25px;
+            padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        h2 {
-            color: #2c3e50;
+        h1 {
             text-align: center;
-            margin-bottom: 20px;
+            color: #333;
+            margin-bottom: 30px;
         }
         .form-group {
             margin-bottom: 20px;
@@ -30,21 +30,24 @@
             display: block;
             margin-bottom: 8px;
             font-weight: bold;
-            color: #34495e;
+            color: #555;
         }
-        input[type="tel"], input[type="text"] {
+        input[type="text"],
+        input[type="tel"],
+        input[type="password"],
+        input[type="number"] {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            box-sizing: border-box;
             font-size: 16px;
+            box-sizing: border-box;
         }
         button {
-            background-color: #3498db;
+            background-color: #4CAF50;
             color: white;
-            padding: 12px 20px;
             border: none;
+            padding: 12px 20px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
@@ -52,240 +55,263 @@
             transition: background-color 0.3s;
         }
         button:hover {
-            background-color: #2980b9;
+            background-color: #45a049;
         }
         button:disabled {
-            background-color: #95a5a6;
+            background-color: #cccccc;
             cursor: not-allowed;
         }
-        .message {
-            margin-top: 20px;
-            padding: 12px;
-            border-radius: 4px;
-            text-align: center;
+        .error {
+            color: #ff4444;
+            font-size: 14px;
+            margin-top: 5px;
         }
         .success {
-            background-color: #d5f5e3;
-            color: #27ae60;
-            border: 1px solid #2ecc71;
+            color: #00C851;
+            font-size: 14px;
+            margin-top: 5px;
         }
-        .error {
-            background-color: #fadbd8;
-            color: #e74c3c;
-            border: 1px solid #e74c3c;
-        }
-        .info {
-            background-color: #d6eaf8;
-            color: #2980b9;
-            border: 1px solid #3498db;
+        .hidden {
+            display: none;
         }
         .timer {
-            color: #7f8c8d;
             text-align: center;
             margin-top: 10px;
-            font-size: 14px;
+            color: #666;
         }
     </style>
 </head>
 <body>
-    <div class="verification-box">
-        <h2>Phone Number Verification</h2>
-        <form id="verificationForm">
+    <div class="container">
+        <h1>Phone Number Verification</h1>
+        
+        <!-- Step 1: Enter Phone Number -->
+        <div id="step1">
             <div class="form-group">
-                <label for="phone">Phone Number:</label>
-                <input type="tel" id="phone" name="phone" placeholder="94712345678" required>
+                <label for="phone">Enter your phone number (international format):</label>
+                <input type="tel" id="phone" placeholder="e.g. 94771234567" required>
+                <div id="phoneError" class="error"></div>
             </div>
-            <div class="form-group" id="codeGroup" style="display:none;">
-                <label for="code">Verification Code:</label>
-                <input type="text" id="code" name="code" placeholder="Enter 6-digit code" maxlength="6">
-                <div class="timer" id="timer">Code expires in 05:00</div>
+            <button id="sendOtpBtn" onclick="sendOTP()">Send Verification Code</button>
+        </div>
+        
+        <!-- Step 2: Enter OTP -->
+        <div id="step2" class="hidden">
+            <div class="form-group">
+                <label for="otp">Enter the 6-digit verification code:</label>
+                <input type="number" id="otp" placeholder="123456" required>
+                <div id="otpError" class="error"></div>
+                <div id="otpSuccess" class="success"></div>
+                <div id="resendInfo" class="timer">Didn't receive code? <a href="#" onclick="resendOTP()">Resend</a> (<span id="countdown">60</span>s)</div>
             </div>
-            <button type="button" id="sendBtn">Send Verification Code</button>
-            <button type="button" id="verifyBtn" style="display:none;">Verify Code</button>
-        </form>
-        <div id="message" class="message" style="display:none;"></div>
+            <button id="verifyOtpBtn" onclick="verifyOTP()">Verify Code</button>
+        </div>
+        
+        <!-- Step 3: Verification Complete -->
+        <div id="step3" class="hidden">
+            <div class="form-group">
+                <h2 style="color: #4CAF50; text-align: center;">Verification Successful!</h2>
+                <p style="text-align: center;">Your phone number has been successfully verified.</p>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Configuration (in a real app, these would be handled server-side)
-        const config = {
-            apiKey: '1fd2gkd1610b16db8dtd25deadh8146',
-            username: '94769343928',
-            password: '9694',
-            apiEndpoint: 'https://www.textit.biz/sendmessage',
-            verificationCodeLength: 6,
-            codeExpiryMinutes: 5
-        };
-
-        // DOM elements
-        const phoneInput = document.getElementById('phone');
-        const codeInput = document.getElementById('code');
-        const sendBtn = document.getElementById('sendBtn');
-        const verifyBtn = document.getElementById('verifyBtn');
-        const codeGroup = document.getElementById('codeGroup');
-        const messageDiv = document.getElementById('message');
-        const timerDiv = document.getElementById('timer');
-
-        // State variables
-        let verificationCode = '';
-        let expiryTime = null;
-        let timerInterval = null;
-
-        // Event listeners
-        sendBtn.addEventListener('click', sendVerificationCode);
-        verifyBtn.addEventListener('click', verifyCode);
-
-        // Format phone number as user types
-        phoneInput.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (value.length > 0 && !value.startsWith('94')) {
-                value = '94' + value;
-            }
-            if (value.length > 11) {
-                value = value.substring(0, 11);
-            }
-            e.target.value = value;
-        });
-
-        // Send verification code
-        function sendVerificationCode() {
-            const phone = phoneInput.value.trim();
+        // Configuration - Replace these with your actual Textit.bz credentials
+        const TEXTIT_ID = "94769343928"; // Your Textit.bz account phone number
+        const TEXTIT_PW = "9694";       // Your Textit.bz password
+        
+        // Global variables
+        let generatedOtp = "";
+        let countdownInterval;
+        let countdownSeconds = 60;
+        
+        // Function to generate a 6-digit OTP
+        function generateOTP() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+        
+        // Function to validate phone number (simple international format validation)
+        function validatePhoneNumber(phone) {
+            // Remove any non-digit characters
+            const cleaned = phone.replace(/\D/g, '');
+            
+            // Basic validation - at least 8 digits, starts with country code
+            return cleaned.length >= 8 && /^\d+$/.test(cleaned);
+        }
+        
+        // Function to send OTP via Textit.bz
+        function sendOTP() {
+            const phoneInput = document.getElementById("phone");
+            const phoneError = document.getElementById("phoneError");
+            const phoneNumber = phoneInput.value.trim();
             
             // Validate phone number
-            if (!phone || !/^947\d{8}$/.test(phone)) {
-                showMessage('Please enter a valid Sri Lankan phone number starting with 947 (11 digits total)', 'error');
+            if (!validatePhoneNumber(phoneNumber)) {
+                phoneError.textContent = "Please enter a valid phone number in international format (e.g. 94771234567)";
                 return;
             }
             
-            // Disable send button during processing
-            sendBtn.disabled = true;
-            sendBtn.textContent = 'Sending...';
+            phoneError.textContent = "";
             
-            showMessage('Sending verification code to ' + phone + '...', 'info');
+            // Generate OTP
+            generatedOtp = generateOTP();
+            const message = `Your verification code is: ${generatedOtp}`;
             
-            // Generate random verification code
-            verificationCode = generateRandomCode(config.verificationCodeLength);
-            expiryTime = new Date();
-            expiryTime.setMinutes(expiryTime.getMinutes() + config.codeExpiryMinutes);
+            // Encode message for URL
+            const encodedMessage = encodeURIComponent(message);
             
-            // Prepare message
-            const message = `Your verification code is: ${verificationCode}. Valid for ${config.codeExpiryMinutes} minutes.`;
+            // Construct the Textit.bz API URL
+            const apiUrl = `https://www.textit.biz/sendmsg/?id=${TEXTIT_ID}&pw=${TEXTIT_PW}&to=${phoneNumber}&text=${encodedMessage}`;
             
-            // In a real implementation, you would make an AJAX call to your server here
-            // which would then use the TextIt.biz API to send the SMS
-            // For security reasons, we're simulating this process
+            // Show loading state
+            const sendOtpBtn = document.getElementById("sendOtpBtn");
+            sendOtpBtn.disabled = true;
+            sendOtpBtn.textContent = "Sending...";
             
-            // Simulate API call delay
+            // Send the SMS via Textit.bz
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    // Check if the response indicates success (Textit.bz returns "OK: " prefix for success)
+                    if (data.startsWith("OK: ")) {
+                        // Hide step 1, show step 2
+                        document.getElementById("step1").classList.add("hidden");
+                        document.getElementById("step2").classList.remove("hidden");
+                        
+                        // Start countdown timer for resend
+                        startCountdown();
+                    } else {
+                        throw new Error(data);
+                    }
+                })
+                .catch(error => {
+                    phoneError.textContent = "Failed to send verification code. Please try again later.";
+                    console.error("Error sending OTP:", error);
+                })
+                .finally(() => {
+                    sendOtpBtn.disabled = false;
+                    sendOtpBtn.textContent = "Send Verification Code";
+                });
+        }
+        
+        // Function to verify the entered OTP
+        function verifyOTP() {
+            const otpInput = document.getElementById("otp");
+            const otpError = document.getElementById("otpError");
+            const enteredOtp = otpInput.value.trim();
+            
+            if (enteredOtp.length !== 6 || !/^\d+$/.test(enteredOtp)) {
+                otpError.textContent = "Please enter a valid 6-digit code";
+                return;
+            }
+            
+            if (enteredOtp !== generatedOtp) {
+                otpError.textContent = "Invalid verification code. Please try again.";
+                return;
+            }
+            
+            // Clear any errors and show success
+            otpError.textContent = "";
+            document.getElementById("otpSuccess").textContent = "Verification successful!";
+            
+            // Disable the verify button
+            document.getElementById("verifyOtpBtn").disabled = true;
+            
+            // Show the completion step after a short delay
             setTimeout(() => {
-                // This is where you would actually call the TextIt.biz API
-                // Example API call structure:
-                // fetch(`${config.apiEndpoint}?user=${config.username}&password=${config.password}&phone=${phone}&text=${encodeURIComponent(message)}&apikey=${config.apiKey}`)
+                document.getElementById("step2").classList.add("hidden");
+                document.getElementById("step3").classList.remove("hidden");
                 
-                // For this demo, we'll simulate a successful response
-                simulateApiResponse(phone, message);
-            }, 1500);
+                // Clear the countdown interval
+                clearInterval(countdownInterval);
+            }, 1000);
         }
-
-        // Simulate API response
-        function simulateApiResponse(phone, message) {
-            console.log('Simulated API call to TextIt.biz:');
-            console.log('Phone:', phone);
-            console.log('Message:', message);
-            console.log('API Key:', config.apiKey);
+        
+        // Function to resend OTP
+        function resendOTP() {
+            // Only allow resend if countdown is finished
+            if (countdownSeconds > 0) return;
             
-            // Assume success for demo purposes
-            showMessage(`Verification code sent to ${phone}`, 'success');
+            // Reset countdown
+            countdownSeconds = 60;
+            document.getElementById("countdown").textContent = countdownSeconds;
             
-            // Show verification code input
-            codeGroup.style.display = 'block';
-            verifyBtn.style.display = 'block';
-            sendBtn.style.display = 'none';
+            // Generate new OTP
+            generatedOtp = generateOTP();
+            const phoneNumber = document.getElementById("phone").value.trim();
+            const message = `Your new verification code is: ${generatedOtp}`;
+            const encodedMessage = encodeURIComponent(message);
             
-            // Start countdown timer
-            startCountdown();
+            // Construct the Textit.bz API URL
+            const apiUrl = `https://www.textit.biz/sendmsg/?id=${TEXTIT_ID}&pw=${TEXTIT_PW}&to=${phoneNumber}&text=${encodedMessage}`;
+            
+            // Show loading state on resend link
+            const resendInfo = document.getElementById("resendInfo");
+            resendInfo.innerHTML = "Sending new code...";
+            
+            // Send the SMS via Textit.bz
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    if (data.startsWith("OK: ")) {
+                        // Restart countdown
+                        startCountdown();
+                        
+                        // Show success message
+                        document.getElementById("otpError").textContent = "";
+                        document.getElementById("otpSuccess").textContent = "New verification code sent!";
+                        
+                        // Clear success message after 3 seconds
+                        setTimeout(() => {
+                            document.getElementById("otpSuccess").textContent = "";
+                        }, 3000);
+                    } else {
+                        throw new Error(data);
+                    }
+                })
+                .catch(error => {
+                    document.getElementById("otpError").textContent = "Failed to resend code. Please try again.";
+                    console.error("Error resending OTP:", error);
+                });
         }
-
-        // Verify the entered code
-        function verifyCode() {
-            const enteredCode = codeInput.value.trim();
-            
-            if (!enteredCode || enteredCode.length !== config.verificationCodeLength) {
-                showMessage(`Please enter a valid ${config.verificationCodeLength}-digit code`, 'error');
-                return;
-            }
-            
-            if (new Date() > expiryTime) {
-                showMessage('Verification code has expired. Please request a new one.', 'error');
-                resetVerificationForm();
-                return;
-            }
-            
-            if (enteredCode === verificationCode) {
-                // Success - code matches
-                showMessage('Phone number verified successfully!', 'success');
-                clearInterval(timerInterval);
-                
-                // In a real app, you would submit the form or redirect
-                setTimeout(() => {
-                    alert('Verification complete! You would now be redirected or your form would be submitted.');
-                }, 1000);
-            } else {
-                showMessage('Invalid verification code. Please try again.', 'error');
-                codeInput.value = '';
-                codeInput.focus();
-            }
-        }
-
-        // Helper functions
-        function generateRandomCode(length) {
-            const chars = '0123456789';
-            let result = '';
-            for (let i = 0; i < length; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
-
+        
+        // Function to start countdown timer
         function startCountdown() {
-            clearInterval(timerInterval);
+            clearInterval(countdownInterval); // Clear any existing interval
             
-            function updateTimer() {
-                const now = new Date();
-                const diff = expiryTime - now;
+            countdownSeconds = 60;
+            document.getElementById("countdown").textContent = countdownSeconds;
+            document.getElementById("resendInfo").innerHTML = `Didn't receive code? <a href="#" onclick="resendOTP()">Resend</a> (<span id="countdown">${countdownSeconds}</span>s)`;
+            
+            countdownInterval = setInterval(() => {
+                countdownSeconds--;
+                document.getElementById("countdown").textContent = countdownSeconds;
                 
-                if (diff <= 0) {
-                    clearInterval(timerInterval);
-                    timerDiv.textContent = 'Code has expired';
-                    showMessage('Verification code has expired. Please request a new one.', 'error');
-                    resetVerificationForm();
-                    return;
+                if (countdownSeconds <= 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById("resendInfo").innerHTML = 'Didn\'t receive code? <a href="#" onclick="resendOTP()">Resend</a>';
                 }
-                
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                
-                timerDiv.textContent = `Code expires in ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+        
+        // Allow form submission on Enter key for OTP field
+        document.getElementById("otp").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                verifyOTP();
             }
-            
-            updateTimer();
-            timerInterval = setInterval(updateTimer, 1000);
-        }
-
-        function resetVerificationForm() {
-            codeGroup.style.display = 'none';
-            verifyBtn.style.display = 'none';
-            sendBtn.style.display = 'block';
-            sendBtn.disabled = false;
-            sendBtn.textContent = 'Send Verification Code';
-            codeInput.value = '';
-            clearInterval(timerInterval);
-        }
-
-        function showMessage(text, type) {
-            messageDiv.textContent = text;
-            messageDiv.className = 'message ' + (type || '');
-            messageDiv.style.display = 'block';
-        }
+        });
     </script>
 </body>
 </html>
