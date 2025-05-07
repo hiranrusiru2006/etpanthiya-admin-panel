@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Number Verification via SMS</title>
+    <title>SMS Verification via TextIt.biz</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -21,6 +21,7 @@
         h1 {
             color: #333;
             text-align: center;
+            margin-bottom: 20px;
         }
         .form-group {
             margin-bottom: 15px;
@@ -32,19 +33,22 @@
         }
         input[type="text"], input[type="tel"] {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
             box-sizing: border-box;
+            font-size: 16px;
         }
         button {
             background-color: #4CAF50;
             color: white;
-            padding: 10px 15px;
+            padding: 12px 20px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
+            width: 100%;
+            margin-top: 5px;
         }
         button:hover {
             background-color: #45a049;
@@ -55,7 +59,7 @@
         }
         #response {
             margin-top: 20px;
-            padding: 10px;
+            padding: 15px;
             border-radius: 4px;
             display: none;
         }
@@ -83,19 +87,28 @@
             border-top-color: #fff;
             animation: spin 1s ease-in-out infinite;
             margin-right: 10px;
+            vertical-align: middle;
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+        .note {
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Number Verification via SMS</h1>
+        <h1>SMS Verification System</h1>
         
         <div class="form-group">
-            <label for="phoneNumber">Phone Number (with country code):</label>
-            <input type="tel" id="phoneNumber" placeholder="e.g., 94772823050" required>
+            <label for="phoneNumber">Recipient Phone Number (with country code):</label>
+            <input type="tel" id="phoneNumber" placeholder="e.g., 94769343928" required>
         </div>
         
         <button id="sendVerificationBtn">
@@ -105,16 +118,25 @@
         
         <div id="verificationSection" style="display: none; margin-top: 20px;">
             <div class="form-group">
-                <label for="verificationCode">Enter Verification Code:</label>
-                <input type="text" id="verificationCode" placeholder="6-digit code">
+                <label for="verificationCode">Enter 6-Digit Verification Code:</label>
+                <input type="text" id="verificationCode" placeholder="Enter code received via SMS" maxlength="6">
             </div>
-            <button id="verifyBtn">Verify Number</button>
+            <button id="verifyBtn">Verify Phone Number</button>
         </div>
         
         <div id="response"></div>
+        
+        <div class="note">
+            <strong>Note:</strong> This system uses TextIt.biz SMS gateway to send verification codes.
+            Standard SMS rates may apply.
+        </div>
     </div>
 
     <script>
+        // Your TextIt.biz credentials
+        const TEXTIT_ID = "94769343928";  // Your registered phone number
+        const TEXTIT_PW = "9694";        // Your password
+        
         // Store the generated verification code
         let generatedCode = "";
         
@@ -129,23 +151,50 @@
                 return;
             }
             
+            // Validate phone number format
+            if (!/^\d+$/.test(phoneNumber)) {
+                showResponse("Phone number should contain only digits", "error");
+                return;
+            }
+            
             // Disable button and show loading
             btn.disabled = true;
             spinner.style.display = 'inline-block';
-            btnText.textContent = 'Sending...';
+            btnText.textContent = 'Sending SMS...';
             
             try {
                 // Generate a 6-digit random code
                 generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
                 
-                // For demonstration, we'll simulate the API call
-                await simulateApiCall(phoneNumber);
+                // Prepare message (URL encoded)
+                const message = `Your+verification+code+is:+${generatedCode}`;
                 
-                showResponse(`Verification code sent to ${phoneNumber}. Code: <span class="verification-code">${generatedCode}</span> (displayed for testing)`, "success");
-                document.getElementById('verificationSection').style.display = 'block';
+                // Build the API URL
+                const apiUrl = `https://www.textit.biz/sendmsg/?id=${TEXTIT_ID}&pw=${TEXTIT_PW}&to=${phoneNumber}&text=${message}`;
+                
+                // Make the API call
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`SMS gateway error: ${response.status}`);
+                }
+                
+                const responseText = await response.text();
+                
+                // Check for success response (TextIt.biz returns "OK" on success)
+                if (responseText.includes("OK")) {
+                    showResponse(`Verification code sent to ${phoneNumber}`, "success");
+                    document.getElementById('verificationSection').style.display = 'block';
+                } else {
+                    throw new Error(responseText);
+                }
             } catch (error) {
                 console.error('Error:', error);
-                showResponse("Failed to send verification code: " + error.message, "error");
+                showResponse("Failed to send verification code. Error: " + error.message, "error");
+                
+                // For testing purposes, show the code anyway
+                showResponse(`Test mode: Would send code ${generatedCode} to ${phoneNumber}`, "error");
+                document.getElementById('verificationSection').style.display = 'block';
             } finally {
                 // Re-enable button
                 btn.disabled = false;
@@ -163,29 +212,11 @@
             }
             
             if (enteredCode === generatedCode) {
-                showResponse("Phone number verified successfully!", "success");
+                showResponse("✓ Phone number verified successfully!", "success");
             } else {
                 showResponse("Invalid verification code. Please try again.", "error");
             }
         });
-        
-        // Simulate API call
-        function simulateApiCall(phoneNumber) {
-            return new Promise((resolve, reject) => {
-                // Simulate network delay
-                setTimeout(() => {
-                    // Simulate success 90% of the time for demo purposes
-                    if (Math.random() > 0.1) {
-                        resolve({
-                            status: "success",
-                            message: "SMS would be sent to: " + phoneNumber
-                        });
-                    } else {
-                        reject(new Error("Simulated network error - please try again"));
-                    }
-                }, 1500);
-            });
-        }
         
         function showResponse(message, type) {
             const responseDiv = document.getElementById('response');
