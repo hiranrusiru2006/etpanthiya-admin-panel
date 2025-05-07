@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Verification via SMS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="tel"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #response {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+        .verification-code {
+            font-size: 18px;
+            font-weight: bold;
+            color: #31708f;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Number Verification via SMS</h1>
+        
+        <div class="form-group">
+            <label for="phoneNumber">Phone Number (with country code):</label>
+            <input type="tel" id="phoneNumber" placeholder="e.g., 94772823050" required>
+        </div>
+        
+        <button id="sendVerificationBtn">
+            <span id="sendSpinner" class="loading" style="display: none;"></span>
+            <span id="sendText">Send Verification Code</span>
+        </button>
+        
+        <div id="verificationSection" style="display: none; margin-top: 20px;">
+            <div class="form-group">
+                <label for="verificationCode">Enter Verification Code:</label>
+                <input type="text" id="verificationCode" placeholder="6-digit code">
+            </div>
+            <button id="verifyBtn">Verify Number</button>
+        </div>
+        
+        <div id="response"></div>
+    </div>
+
+    <script>
+        // Your API key
+        const API_KEY = "1fd2gkd1610b16db8dtd25deadh8146";
+        // Store the generated verification code
+        let generatedCode = "";
+        
+        document.getElementById('sendVerificationBtn').addEventListener('click', async function() {
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const btn = document.getElementById('sendVerificationBtn');
+            const spinner = document.getElementById('sendSpinner');
+            const btnText = document.getElementById('sendText');
+            
+            if (!phoneNumber) {
+                showResponse("Please enter a phone number", "error");
+                return;
+            }
+            
+            // Disable button and show loading
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+            btnText.textContent = 'Sending...';
+            
+            try {
+                // Generate a 6-digit random code
+                generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+                
+                const message = `Your verification code is: ${generatedCode}`;
+                
+                // For testing purposes, we'll simulate the API call
+                // In a real implementation, you would use the actual API
+                const response = await simulateApiCall(phoneNumber, message);
+                
+                showResponse(`Verification code sent to ${phoneNumber}. Code: <span class="verification-code">${generatedCode}</span> (for testing)`, "success");
+                document.getElementById('verificationSection').style.display = 'block';
+            } catch (error) {
+                console.error('Error:', error);
+                showResponse("Failed to send verification code: " + error.message, "error");
+            } finally {
+                // Re-enable button
+                btn.disabled = false;
+                spinner.style.display = 'none';
+                btnText.textContent = 'Send Verification Code';
+            }
+        });
+        
+        document.getElementById('verifyBtn').addEventListener('click', function() {
+            const enteredCode = document.getElementById('verificationCode').value.trim();
+            
+            if (!enteredCode) {
+                showResponse("Please enter the verification code", "error");
+                return;
+            }
+            
+            if (enteredCode === generatedCode) {
+                showResponse("Phone number verified successfully!", "success");
+            } else {
+                showResponse("Invalid verification code. Please try again.", "error");
+            }
+        });
+        
+        // Simulate API call since direct browser calls may be blocked by CORS
+        function simulateApiCall(to, text) {
+            return new Promise((resolve, reject) => {
+                // Simulate network delay
+                setTimeout(() => {
+                    // Simulate success 80% of the time for demo purposes
+                    if (Math.random() > 0.2) {
+                        resolve({
+                            status: "success",
+                            message: "SMS sent successfully (simulated)"
+                        });
+                    } else {
+                        reject(new Error("Simulated network error"));
+                    }
+                }, 1500);
+            });
+        }
+        
+        // Actual API call (commented out due to likely CORS issues)
+        /*
+        function sendSMS(to, text) {
+            return new Promise((resolve, reject) => {
+                const url = "https://api.textit.biz/";
+                
+                const headers = {
+                    "Content-Type": "application/json",
+                    "Accept": "*/*",
+                    "X-API-VERSION": "v1",
+                    "Authorization": `Basic ${API_KEY}`
+                };
+                
+                const body = JSON.stringify({
+                    to: to,
+                    text: text
+                });
+                
+                fetch(url, {
+                    method: "POST",
+                    headers: headers,
+                    body: body
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    resolve(data);
+                })
+                .catch(error => {
+                    reject(error);
+                });
+            });
+        }
+        */
+        
+        function showResponse(message, type) {
+            const responseDiv = document.getElementById('response');
+            responseDiv.innerHTML = message;
+            responseDiv.className = type;
+            responseDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
