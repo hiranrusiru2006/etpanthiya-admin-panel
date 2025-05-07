@@ -1,1 +1,35 @@
 
+<?php
+/**
+ * TEST SCRIPT - PROTECT THIS FILE IN PRODUCTION
+ * Add to .htaccess: 
+ * <Files "send_sms_test.php">
+ *   Order Allow,Deny
+ *   Deny from all
+ * </Files>
+ */
+
+require_once '../config.php';
+
+header('Content-Type: text/plain');
+
+if ($_SERVER['REMOTE_ADDR'] !== '127.0.0.1') {
+    die("Access denied");
+}
+
+$testNumber = '94761234567'; // Replace with your test number
+$testMessage = urlencode("This is a test message from TextIt.biz");
+
+$url = SMS_GATEWAY_URL . "?id=" . SMS_SENDER_ID . "&pw=" . SMS_PASSWORD . "&to=" . $testNumber . "&text=" . $testMessage;
+
+echo "Sending test SMS to: $testNumber\n";
+echo "Using URL: " . htmlspecialchars($url) . "\n\n";
+
+$response = file_get_contents($url);
+
+if ($response !== false) {
+    echo "SMS sent successfully!\n";
+    echo "Gateway response: " . htmlspecialchars($response);
+} else {
+    echo "Failed to send SMS";
+}
