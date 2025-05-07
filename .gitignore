@@ -1,8 +1,0 @@
-# Ignore configuration files with sensitive data
-config.php
-
-# Ignore environment files
-.env
-
-# Ignore system files
-.DS_Store
